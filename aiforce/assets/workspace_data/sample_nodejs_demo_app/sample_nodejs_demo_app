@@ -1,0 +1,33 @@
+import pandas as pd
+from fbprophet import Prophet
+import matplotlib.pyplot as plt
+
+# Load data
+df = pd.read_csv('path_to_your_time_series_data.csv')
+
+# Prepare data for Prophet
+df['ds'] = pd.to_datetime(df['timestamp'])
+df['y'] = df['value']
+df = df[['ds', 'y']]
+
+# Fit the model
+model = Prophet()
+model.fit(df)
+
+# Make predictions
+future = model.make_future_dataframe(periods=365)
+forecast = model.predict(future)
+
+# Plot the results
+fig1 = model.plot(forecast)
+plt.title('Time Series Anomaly Detection')
+plt.xlabel('Date')
+plt.ylabel('Value')
+plt.show()
+
+# Detect anomalies
+df['anomaly'] = df['y'] - forecast['yhat']
+df['anomaly'] = df['anomaly'].apply(lambda x: 1 if x > 3*forecast['yhat_upper'] else 0)
+
+# Save the results
+df.to_csv('anomaly_detection_results.csv', index=False)

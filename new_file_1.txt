@@ -1,0 +1,66 @@
+import requests
+import json
+import uuid
+import time
+
+# --- Configuration ---
+# The URL from your .well-known.json
+BASE_URL = "https://aiforce.hcltech.com/acs/a2a/usecases/2452/"
+# Replace with your actual JWT token
+API_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODU1NDIzOTksInVzZXJfaWQiOjEyOTMsInVzZXJfbmFtZSI6InN1ZGhha2FyLnJhZ2hhIiwiZW1haWxfaWQiOiJzdWRoYWthci5yYWdoYUBoY2x0ZWNoLmNvbSIsIm9yZ19pZCI6MSwicm9sZSI6IlByb2plY3QgQWRtaW4iLCJyb2xlX2lkIjoyLCJwcm9qZWN0X2lkIjo2NCwiaXNfc3VwZXJfYWRtaW4iOmZhbHNlLCJyb2xlX3R5cGVfaWQiOjIsInJvbGVfdHlwZSI6IlByb2plY3QgQWRtaW4iLCJ1c2VyX3R5cGUiOiJwbGF0Zm9ybV91c2VyIiwiaXNzIjoicGF0IiwianRpZCI6IjIyYjk0ZGNjOTc4YzQzZmZhYWVlYWQ0MjNmODNmYmIwIiwibGljZW5zZSI6bnVsbCwidG9rZW5pZCI6bnVsbCwicHJvamVjdF9uYW1lIjoiR0EgUmVncmVzc2lvbiAtIFRyYXZlbCBwcm9qZWN0In0.eGrVEY31ky5NDkYBvEDN5elCzLl3Nz3-9s9Ns1uzwKVChSmxpcqDRkLLroYO3uLuJFuzFVeSau4IswEnK8s83Uq-LHOSJ3JPGpEQMWV3T0mtESOlDieS_Olv4C3jocJo4MBjjd0QV772XDmKjFf6hbH3ZToa5KDTAxuwXUKiKOnrz1Eb16yz-WJWS0G7J91HdcNahkaqzl6VlxLZLUPaUsGDCiA0WIEfokDAHO6vVS-P4HCb0Ef66Uot5HKPA35KIBxMZUmS3yxDuehrrYcyv3iltY3Vn-IprKTzel0fO58BKQOf7op5YhTIIBLvnF9jMN5zKH6Si_mzlIOQIYyW6g"  # Replace with your actual token
+
+
+def test_a2a_jsonrpc():
+    # Headers based on securitySchemes in your .well-known.json
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_TOKEN}"
+    }
+
+    # Constructing the JSON-RPC Payload
+    # Note: JSON-RPC usually requires 'jsonrpc' and 'id' fields
+    payload = {
+        "jsonrpc": "2.0",
+        "id": str(uuid.uuid4()),
+        "method": "message/send",
+        "params": {
+            "message": {
+                "contextId": str(uuid.uuid4()), # Unique session ID
+                "kind": "message",
+                "messageId": f"msg-{int(time.time()*1000)}",
+                "metadata": {},
+                "parts": [
+                    {
+                        "kind": "text",
+                        "text": "What JIRA details you need"
+                    }
+                ],
+                "role": "user"
+            }
+        }
+    }
+
+    print(f"Sending request to: {BASE_URL}")
+    
+    try:
+        response = requests.post(
+            BASE_URL, 
+            headers=headers, 
+            data=json.dumps(payload),
+            timeout=30
+        )
+        
+        # Check if the request was successful
+        response.raise_for_status()
+        
+        print("\n--- Response Received ---")
+        print(json.dumps(response.json(), indent=2))
+        
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        print(f"Response Body: {response.text}")
+    except Exception as err:
+        print(f"An error occurred: {err}")
+
+if __name__ == "__main__":
+    test_a2a_jsonrpc()
